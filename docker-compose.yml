@@ -1,0 +1,56 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: orator-redis
+    ports:
+      - "6379:6379"
+
+  fastapi:
+    container_name: orator-api
+    build:
+      context: ./Backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./Backend:/app
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - redis
+
+  celery:
+    container_name: orator-celery
+    build:
+      context: ./Backend
+    command: celery -A celery_config worker --loglevel=info
+    volumes:
+      - ./Backend:/app
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - redis
+
+  flower:
+    image: mher/flower
+    container_name: orator-flower
+    ports:
+      - "5555:5555"
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    command: >
+      flower --broker=redis://redis:6379/0 --port=5555
+    depends_on:
+      - redis
+
+  clamav:
+    image: mkodockx/docker-clamav
+    container_name: orator-clamav
+    ports:
+      - "3310:3310"
+    healthcheck:
+      test: ["CMD", "clamdscan", "--version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

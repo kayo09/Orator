@@ -1,6 +1,12 @@
+pyclamd
 python-multipart
 uvicorn
+celery[redis]
+pdfminer.six
+pyclamd
 httpx
 pytest
 fastapi
 multipart
+TTS
+tasks

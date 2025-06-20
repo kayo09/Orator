@@ -1,7 +1,7 @@
-# ORATOR 🗣️ : THE ONLY WAY TO LISTEN TO PDF'S AND EPUBS
+# ORATOR 🗣️ : THE ONLY WAY TO LISTEN TO PDFs AND EPUBs
 ![](/Users/kayparmar/Desktop/code/Projects/ORATOR/System_Design.png)
 ## <ins>Outline<ins>
-- [ORATOR 🗣️ : THE ONLY WAY TO LISTEN TO PDF'S AND EPUBS](#orator-️--the-only-way-to-listen-to-pdfs-and-epubs)
+- [ORATOR 🗣️ : THE ONLY WAY TO LISTEN TO PDFs AND EPUBs](#orator-️--the-only-way-to-listen-to-pdfs-and-epubs)
   - [Outline](#outline)
     - [What is the problem at hand?](#what-is-the-problem-at-hand)
     - [TECH STACK](#tech-stack)
