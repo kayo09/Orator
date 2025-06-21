@@ -36,7 +36,7 @@ jobs:
     
     defaults:
       run:
-        working-directory: ./Backend
+        working-directory: ./backend
     
     steps:
       - name: Checkout code
@@ -70,28 +70,41 @@ jobs:
           CLAMAV_PORT: 3310
           REDIS_HOST: localhost
           REDIS_PORT: 6379
+          CELERY_BROKER_URL: redis://localhost:6379/0
+          CELERY_RESULT_BACKEND: redis://localhost:6379/0
         run: |
           pytest Test/ -v
 
   frontend:
     name: Frontend Build
     runs-on: ubuntu-latest
-
     defaults:
       run:
-        working-directory: ./Frontend
-
+        working-directory: ./frontend
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
+      
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-
+          cache: 'npm'
+          cache-dependency-path: './frontend/package-lock.json'
+      
       - name: Install dependencies
-        run: npm install
-
+        run: npm ci
+      
+      - name: Run tests (if you have them)
+        run: npm test --if-present
+      
       - name: Run build
-        run: npm run build
+        run: npm run dev 
+      
+      - name: Upload build artifacts (optional)
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: ./frontend/build/
+          retention-days: 7

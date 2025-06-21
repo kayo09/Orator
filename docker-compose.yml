@@ -1,110 +1,64 @@
-name: CI Pipeline
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: orator-redis
+    ports:
+      - "6379:6379"
 
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  fastapi:
+    container_name: orator-api
+    build:
+      context: ./backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./Backend:/app
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - redis
 
-jobs:
-  backend:
-    name: Backend Test
-    runs-on: ubuntu-latest
-    
-    # Add Docker services for your dependencies
-    services:
-      redis:
-        image: redis:7-alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-      
-      clamav:
-        image: clamav/clamav-debian:latest
-        ports:
-          - 3310:3310
-        options: >-
-          --health-cmd "clamdscan --version"
-          --health-interval 30s
-          --health-timeout 10s
-          --health-retries 10
-          --health-start-period 120s
-    
-    defaults:
-      run:
-        working-directory: ./Backend
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-      
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-      
-      - name: Wait for ClamAV to be ready
-        run: |
-          echo "Waiting for ClamAV to start..."
-          for i in {1..60}; do
-            if curl -f http://localhost:3310 2>/dev/null || nc -z localhost 3310; then
-              echo "ClamAV is ready!"
-              break
-            fi
-            echo "Waiting for ClamAV... ($i/60)"
-            sleep 5
-          done
-      
-      - name: Run pytest
-        env:
-          CLAMAV_HOST: localhost
-          CLAMAV_PORT: 3310
-          REDIS_HOST: localhost
-          REDIS_PORT: 6379
-          CELERY_BROKER_URL: redis://localhost:6379/0
-          CELERY_RESULT_BACKEND: redis://localhost:6379/0
-        run: |
-          pytest Test/ -v
+  celery:
+    container_name: orator-celery
+    build:
+      context: ./backend
+    command: celery -A celery_config worker --loglevel=info
+    volumes:
+      - ./Backend:/app
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - redis
 
-  frontend:
-    name: Frontend Build
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./Frontend
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: './Frontend/package-lock.json'
-      
-      - name: Install dependencies
-        run: npm ci
-      
-      - name: Run tests (if you have them)
-        run: npm test --if-present
-      
-      - name: Run build
-        run: npm run build
-      
-      - name: Upload build artifacts (optional)
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-build
-          path: ./Frontend/build/
-          retention-days: 7
+  # flower:
+  #   image: mher/flower:latest
+  #   container_name: orator-flower
+  #   ports:
+  #     - "5555:5555"
+  #   command: ["flower", "--broker=redis://redis:6379/0", "--port=5555"]
+  #   depends_on:
+  #     - redis
+
+  flower:
+    build:
+      context: ./flower
+    container_name: orator-flower
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+
+
+
+  clamav:
+    image: clamav/clamav-debian:latest 
+    container_name: orator-clamav
+    ports:
+      - "3310:3310"
+    healthcheck:
+      test: ["CMD", "clamdscan", "--version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
