@@ -33,7 +33,7 @@ async def upload_file(file: UploadFile = File(...)):
     content = await file.read()
     if len(content) > MAX_FILE_SIZE_MB * 1024 * 1024:
         raise HTTPException(status_code=400, detail="File too large.")
-    cd = pyclamd.ClamdNetworkSocket(host="clamav", port=3310)
+    cd = pyclamd.ClamdNetworkSocket(host="localhost", port=3310)
     if not cd.ping():
         raise HTTPException(status_code=500, detail="Antivirus engine not available.")
 

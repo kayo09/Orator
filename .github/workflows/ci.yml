@@ -10,28 +10,68 @@ jobs:
   backend:
     name: Backend Test
     runs-on: ubuntu-latest
-
+    
+    # Add Docker services for your dependencies
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      
+      clamav:
+        image: clamav/clamav-debian:latest
+        ports:
+          - 3310:3310
+        options: >-
+          --health-cmd "clamdscan --version"
+          --health-interval 30s
+          --health-timeout 10s
+          --health-retries 10
+          --health-start-period 120s
+    
     defaults:
       run:
         working-directory: ./Backend
-
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
+      
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-
+      
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-
-      - name: Run pytest
+      
+      - name: Wait for ClamAV to be ready
         run: |
-          pytest Test/
+          echo "Waiting for ClamAV to start..."
+          for i in {1..60}; do
+            if curl -f http://localhost:3310 2>/dev/null || nc -z localhost 3310; then
+              echo "ClamAV is ready!"
+              break
+            fi
+            echo "Waiting for ClamAV... ($i/60)"
+            sleep 5
+          done
+      
+      - name: Run pytest
+        env:
+          CLAMAV_HOST: localhost
+          CLAMAV_PORT: 3310
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+        run: |
+          pytest Test/ -v
 
   frontend:
     name: Frontend Build
@@ -55,4 +95,3 @@ jobs:
 
       - name: Run build
         run: npm run build
-
