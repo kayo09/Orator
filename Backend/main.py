@@ -10,7 +10,7 @@ app = FastAPI()
 
 ALLOWED_EXTENSIONS = {".pdf", ".epub"}
 ALLOWED_MIME_TYPES = {"application/pdf", "application/epub+zip"}
-MAX_FILE_SIZE_MB = 30   
+MAX_FILE_SIZE_MB = 30
 
 app.add_middleware(
     CORSMiddleware,

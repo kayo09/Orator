@@ -32,17 +32,25 @@ services:
     depends_on:
       - redis
 
+  # flower:
+  #   image: mher/flower:latest
+  #   container_name: orator-flower
+  #   ports:
+  #     - "5555:5555"
+  #   command: ["flower", "--broker=redis://redis:6379/0", "--port=5555"]
+  #   depends_on:
+  #     - redis
+
   flower:
-    image: mher/flower
+    build:
+      context: ./flower
     container_name: orator-flower
     ports:
       - "5555:5555"
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-    command: >
-      flower --broker=redis://redis:6379/0 --port=5555
     depends_on:
       - redis
+
+
 
   clamav:
     image: mkodockx/docker-clamav

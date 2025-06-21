@@ -1,12 +1,13 @@
 pyclamd
 python-multipart
-uvicorn
+uvicorn[standard]
 celery[redis]
 pdfminer.six
+flower
 pyclamd
 httpx
 pytest
 fastapi
 multipart
-TTS
 tasks
+dotenv
