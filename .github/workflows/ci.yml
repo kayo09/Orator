@@ -76,7 +76,7 @@ jobs:
           pytest Test/ -v
 
   frontend:
-    name: Frontend Build
+    name: Frontend builder 
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -106,5 +106,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: frontend-build
-          path: ./frontend/build/
+          path: ./frontend/
           retention-days: 7
