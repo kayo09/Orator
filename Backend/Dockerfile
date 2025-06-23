@@ -8,6 +8,8 @@ RUN apt-get update && apt-get install -y \
     curl \
     libmecab-dev \
     mecab-ipadic-utf8 \
+    ffmpeg \
+    libsndfile1 \
     pkg-config \
     rustc \
     && rm -rf /var/lib/apt/lists/*

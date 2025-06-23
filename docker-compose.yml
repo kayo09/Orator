@@ -4,6 +4,29 @@ services:
     container_name: orator-redis
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  clamav:
+    image: clamav/clamav-debian:latest 
+    container_name: orator-clamav
+    ports:
+      - "3310:3310"
+    volumes:
+      - clamav-db:/var/lib/clamav
+    environment:
+      - CLAMAV_NO_FRESHCLAMD=false
+    healthcheck:
+      test: ["CMD", "clamdscan", "--ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 120s  # ClamAV needs time to download virus definitions
+    restart: unless-stopped
 
   fastapi:
     container_name: orator-api
@@ -15,9 +38,22 @@ services:
       - ./Backend:/app
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+      - CLAMD_HOST=clamav  
+      - CLAMD_PORT=3310
+      - ENABLE_ANTIVIRUS=true
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
+      clamav:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
 
   celery:
     container_name: orator-celery
@@ -28,18 +64,17 @@ services:
       - ./Backend:/app
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
     depends_on:
-      - redis
-
-  # flower:
-  #   image: mher/flower:latest
-  #   container_name: orator-flower
-  #   ports:
-  #     - "5555:5555"
-  #   command: ["flower", "--broker=redis://redis:6379/0", "--port=5555"]
-  #   depends_on:
-  #     - redis
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "celery", "-A", "celery_config", "inspect", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
 
   flower:
     build:
@@ -47,18 +82,21 @@ services:
     container_name: orator-flower
     ports:
       - "5555:5555"
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - FLOWER_PORT=5555
     depends_on:
-      - redis
-
-
-
-  clamav:
-    image: clamav/clamav-debian:latest 
-    container_name: orator-clamav
-    ports:
-      - "3310:3310"
+      redis:
+        condition: service_healthy
+      celery:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "clamdscan", "--version"]
+      test: ["CMD", "curl", "-f", "http://localhost:5555/"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
+volumes:
+  clamav-db:

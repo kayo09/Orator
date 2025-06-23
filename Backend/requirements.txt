@@ -11,3 +11,4 @@ fastapi
 multipart
 tasks
 dotenv
+pdfplumber
