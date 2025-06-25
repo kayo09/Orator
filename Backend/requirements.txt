@@ -10,5 +10,24 @@ pytest
 fastapi
 multipart
 tasks
+librosa
 dotenv
 pdfplumber
+coqpit
+trainer>=0.0.36
+pysbd
+pandas
+# bangla
+# numpy
+# matplotlib
+# anyascii
+# bangla
+# bnnumerizer
+# bnunicodenormalizer
+# einops>=0.6.0
+# transformers>=4.33.0
+# encodec>=0.1.1
+# unidecode>=1.3.2
+# num2words
+# spacy[ja]>=3
+# SudachiPy
