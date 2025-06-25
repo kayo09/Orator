@@ -82,30 +82,10 @@ jobs:
         working-directory: frontend
     
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      
-      - name: Set up Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: 'frontend/package-lock.json'
-      
+  
       - name: Install dependencies
         run: npm ci
       
-      - name: Run linting
-        run: |
-          # Add your linting commands
-          # npm run lint || true
-          echo "Linting step placeholder"
-      
-      - name: Run tests
-        run: |
-          # Add your test commands
-          # npm run test
-          echo "Test step placeholder"
       
       - name: Build application
         run: npm run build
