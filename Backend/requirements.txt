@@ -17,6 +17,8 @@ coqpit
 trainer>=0.0.36
 pysbd
 pandas
+redis
+
 # bangla
 # numpy
 # matplotlib

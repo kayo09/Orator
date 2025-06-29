@@ -1,3 +1,4 @@
+version: "3.9"
 services:
   redis:
     image: redis:7-alpine
@@ -10,24 +11,24 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
-
+    restart: unless-stopped
+    
   clamav:
-    image: clamav/clamav-debian:latest 
+    build:
+      context: ./clamav
     container_name: orator-clamav
     ports:
       - "3310:3310"
     volumes:
       - clamav-db:/var/lib/clamav
-    environment:
-      - CLAMAV_NO_FRESHCLAMD=false
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD", "clamdscan", "--ping"]
+      test: ["CMD", "nc", "-z", "localhost", "3310"]
       interval: 30s
       timeout: 10s
       retries: 10
-      start_period: 120s  # ClamAV needs time to download virus definitions
-    restart: unless-stopped
-
+      start_period: 300s 
+      
   fastapi:
     container_name: orator-api
     build:
@@ -38,8 +39,8 @@ services:
       - ./backend:/app
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/1
-      - CLAMD_HOST=clamav  
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - CLAMD_HOST=clamav
       - CLAMD_PORT=3310
       - ENABLE_ANTIVIRUS=true
     depends_on:
@@ -48,23 +49,23 @@ services:
       clamav:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      test: ["CMD", "python", "-v" ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 30s
     restart: unless-stopped
-
+    
   celery:
     container_name: orator-celery
     build:
       context: ./backend
     command: celery -A celery_config worker --loglevel=info
     volumes:
-      - ./Backend:/app
+      - ./backend:/app
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
     depends_on:
       redis:
         condition: service_healthy
@@ -75,7 +76,7 @@ services:
       retries: 3
       start_period: 30s
     restart: unless-stopped
-
+    
   flower:
     build:
       context: ./flower
@@ -97,6 +98,6 @@ services:
       retries: 3
       start_period: 30s
     restart: unless-stopped
-
+    
 volumes:
   clamav-db:

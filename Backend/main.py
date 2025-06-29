@@ -10,11 +10,13 @@ import pdfplumber
 from io import BytesIO
 import subprocess
 import pyclamd
-
+import tasks
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
-# Middleware to handle CORS
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
+# Middleware to handle CORS
 ALLOWED_EXTENSIONS = {".pdf", ".epub"}
 ALLOWED_MIME_TYPES = {"application/pdf", "application/epub+zip"}
 MAX_FILE_SIZE_MB = 30
@@ -27,9 +29,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-CLAMD_HOST = os.getenv("CLAMD_HOST", "clam")
+CLAMD_HOST = os.getenv("CLAMD_HOST", "clamd")
 CLAMD_PORT = int(os.getenv("CLAMD_PORT", 3310))
-
 ENABLE_ANTIVIRUS = os.getenv("ENABLE_ANTIVIRUS", "true").lower() == "true"
 
 async def get_clamd():
@@ -55,6 +56,7 @@ async def upload_file(file: UploadFile = File(...)):
     
     if file.content_type not in ALLOWED_MIME_TYPES:
         raise HTTPException(status_code=400, detail="Unsupported MIME type.")
+    
     content = await file.read()
     if len(content) > MAX_FILE_SIZE_MB * 1024 * 1024:
         raise HTTPException(status_code=400, detail="File too large.")
@@ -78,12 +80,33 @@ async def upload_file(file: UploadFile = File(...)):
             page_text = page.extract_text()
             if page_text:
                 text_content += page_text + "\n"
+    
     if not text_content.strip():
         raise HTTPException(status_code=400, detail="No text could be extracted from the PDF.")
+    
     print(text_content)
+    try:
+        result_task = tasks.convert_text_to_audio.delay(text_content)
+        # Return task ID or success response
+    except Exception as e:
+        # Log the error and return appropriate response
+        print(f"Celery connection failed: {e}")
+    # Handle synchronously or return error to client
 
-
-    return {"filename": file.filename, "content_length": len(content), "type": file.content_type}
+    print(f"Task queued with ID: {result_task.id}")
+    
+    # Wait for the task to complete
+    while not result_task.ready():
+        time.sleep(1)
+    
+    if result_task.failed():
+        raise HTTPException(status_code=500, detail="Audio conversion failed.")
+    
+    audio_path = result_task.result
+    audio_url = f"/static/audio/{audio_path}"
+    print(f"Audio file generated at: {audio_path}")
+    
+    return {"filename": file.filename, "content_length": len(content), "type": file.content_type, "audio_path": audio_url}
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port="8000")
