@@ -7,5 +7,7 @@ export const store = configureStore({
   },
 });
 
+// these inferred types will be used by your hooks.ts
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
+export default store;

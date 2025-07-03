@@ -1,50 +1,53 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import type { PayloadAction, ActionReducerMapBuilder } from "@reduxjs/toolkit";
 import axios from "axios";
 
+// 1) Define the state interface
 interface UploadState {
-  isUploading: boolean;
-  taskId: string | null;
+  status: "idle" | "loading" | "succeeded" | "failed";
+  data: any;           // or a more specific type for your response
   error: string | null;
 }
 
 const initialState: UploadState = {
-  isUploading: false,
-  taskId: null,
+  status: "idle",
+  data: null,
   error: null,
 };
 
-export const uploadFile = createAsyncThunk(
-  "upload/uploadFile",
-  async (file: File, { rejectWithValue }) => {
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const response = await axios.post("http://localhost:8000/upload", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      return response.data.task_id;
-    } catch (err: any) {
-      return rejectWithValue(err.response?.data?.detail || "Upload failed");
-    }
+// 2) createAsyncThunk with proper generics:
+//    <Returned, ThunkArg, { rejectValue: RejectedValue }>
+export const uploadFile = createAsyncThunk<
+  any,         // what the payload creator returns on success
+  File,        // single argument type
+  { rejectValue: string }
+>("upload/file", async (file, { rejectWithValue }) => {
+  try {
+    const form = new FormData();
+    form.append("file", file);
+    const resp = await axios.post("/api/upload", form);
+    return resp.data;
+  } catch (err: any) {
+    return rejectWithValue(err.message);
   }
-);
+});
 
 const uploadSlice = createSlice({
   name: "upload",
   initialState,
   reducers: {},
-  extraReducers: (builder) => {
+  extraReducers: (builder: ActionReducerMapBuilder<UploadState>) => {
     builder
       .addCase(uploadFile.pending, (state) => {
-        state.isUploading = true;
+        state.status = "loading";
         state.error = null;
       })
-      .addCase(uploadFile.fulfilled, (state, action) => {
-        state.isUploading = false;
-        state.taskId = action.payload;
+      .addCase(uploadFile.fulfilled, (state, action: PayloadAction<any>) => {
+        state.status = "succeeded";
+        state.data = action.payload;
       })
       .addCase(uploadFile.rejected, (state, action) => {
-        state.isUploading = false;
+        state.status = "failed";
         state.error = action.payload as string;
       });
   },

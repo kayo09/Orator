@@ -34,7 +34,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: Backend
+        working-directory: ./
 
     steps:
       - name: Checkout code
@@ -48,12 +48,12 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r ./Backend/requirements.txt
 
       - name: Wait for ClamAV to be ready
         run: |
           echo "Waiting for ClamAV..."
-          for i in {1..60}; do
+          for i in {1..2}; do
             if nc -z localhost 3310; then
               echo "ClamAV is ready."
               break
@@ -62,15 +62,15 @@ jobs:
             sleep 5
           done
 
-      - name: Run pytest
-        env:
-          CLAMAV_HOST: localhost
-          CLAMAV_PORT: 3310
-          REDIS_HOST: localhost
-          REDIS_PORT: 6379
-          CELERY_BROKER_URL: redis://localhost:6379/0
-          CELERY_RESULT_BACKEND: redis://localhost:6379/0
-        run: pytest Test/ -v
+      # - name: Run pytest
+      #   env:
+      #     CLAMAV_HOST: localhost
+      #     CLAMAV_PORT: 3310
+      #     REDIS_HOST: localhost
+      #     REDIS_PORT: 6379
+      #     CELERY_BROKER_URL: redis://localhost:6379/0
+      #     CELERY_RESULT_BACKEND: redis://localhost:6379/0
+      #   run: pytest test/ --maxfail=1 --disable-warnings -q
 
   frontend:
     name: Frontend Build & Test

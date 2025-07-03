@@ -181,14 +181,14 @@ def convert_text_to_audio(self, text: str) -> str:
         raise
 
 
-@celery_app.task(bind=True, name="tasks.health_check")
+@celery_app.task(bind=True)
 def health_check(self) -> str:
     """Verify Celery worker is responsive."""
     logger.info("Health check executed")
     return "OK"
 
 
-@celery_app.task(bind=True, name="tasks.test_tts_short")
+@celery_app.task(bind=True)
 def test_tts_short(self) -> str:
     """Quick smoke test for the TTS pipeline."""
     return convert_text_to_audio(self, "Hello, this is a TTS system test.")

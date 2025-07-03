@@ -32,11 +32,12 @@ services:
   fastapi:
     container_name: orator-api
     build:
-      context: ./backend
+      context: ./Backend
     ports:
       - "8000:8000"
     volumes:
-      - ./backend:/app
+      - ./Backend:/app
+      - audio_data:/app/static/audio
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
@@ -59,8 +60,8 @@ services:
   celery:
     container_name: orator-celery
     build:
-      context: ./backend
-    command: celery -A celery_config worker --loglevel=info
+      context: Backend
+    command: celery -A celery_config worker --pool=threads --concurrency=4 --loglevel=info
     volumes:
       - ./backend:/app
     environment:
@@ -100,4 +101,5 @@ services:
     restart: unless-stopped
     
 volumes:
+  audio_data:
   clamav-db:
