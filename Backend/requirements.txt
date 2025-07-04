@@ -9,7 +9,6 @@ httpx
 pytest
 fastapi
 multipart
-tasks
 librosa
 dotenv
 pdfplumber
@@ -18,3 +17,5 @@ trainer>=0.0.36
 pysbd
 pandas
 redis
+ebooklib
+beautifulsoup4

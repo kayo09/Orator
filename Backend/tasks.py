@@ -45,6 +45,8 @@ def make_chunks(text: str) -> list[str]:
     """Split text into sentence-based chunks between MIN_CHARS and MAX_CHARS."""
     # sentence tokenizer inside function to avoid global nltk download
     from nltk.tokenize import sent_tokenize
+    import nltk
+    nltk.download("punkt_tab", quiet=True)
 
     # Normalize whitespace
     text = text.replace("\n", " ")
@@ -76,12 +78,16 @@ def make_chunks(text: str) -> list[str]:
 
 
 @celery_app.task(bind=True, max_retries=3, default_retry_delay=60)
-def convert_text_to_audio(self, text: str) -> str:
+def convert_text_to_audio(self, text: str, file_id: str = None) -> str:
     """Main Celery task: convert input text into a single WAV audio file."""
     try:
         logger.info(f"Starting TTS conversion for text length: {len(text)} chars")
-        # Generate a unique filename
-        audio_name = f"{uuid.uuid4()}.wav"
+        
+        # Use file_id if provided, otherwise generate UUID
+        if file_id:
+            audio_name = f"{file_id}.wav"
+        else:
+            audio_name = f"{uuid.uuid4()}.wav"
 
         # Discover a writable static directory
         possible_paths = [
@@ -170,8 +176,8 @@ def convert_text_to_audio(self, text: str) -> str:
         logger.error(f"TTS conversion failed: {e}")
         # Cleanup partial
         try:
-            if 'audio_path' in locals() and os.path.exists(audio_path):
-                os.remove(audio_path)
+            if 'audio_path' in locals() and os.path.exists(audio_path): # type: ignore
+                os.remove(audio_path) # type: ignore
                 logger.info("Cleaned up partial audio file")
         except:
             pass
@@ -179,7 +185,7 @@ def convert_text_to_audio(self, text: str) -> str:
         if self.request.retries < self.max_retries:
             raise self.retry(exc=e, countdown=60)
         raise
-
+# ----------------------------------------------------------------------------- 
 
 @celery_app.task(bind=True)
 def health_check(self) -> str:

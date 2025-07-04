@@ -16,7 +16,7 @@ RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
 ENV PATH="/root/.cargo/bin:${PATH}"
 
 RUN rustup update
-COPY ./static /app/static
+# COPY ./static /app/static
 
 COPY requirements.txt .
 
