@@ -117,7 +117,7 @@ def convert_text_to_audio(self, text: str, file_id: str = None) -> str:
         # Chunk the text
         chunks = make_chunks(text)
         logger.info(f"Text split into {len(chunks)} chunk(s)")
-
+        self.update_state(state='PROGRESS', meta={"current": 0, "total": len(chunks), "audio_name": audio_name})
         # Load TTS model
         model = get_tts_model()
 
@@ -141,6 +141,8 @@ def convert_text_to_audio(self, text: str, file_id: str = None) -> str:
                         temp_files.append(chunk_path)
                     except RuntimeError as e:
                         logger.warning(f"Chunk {i+1} failed: {e}")
+                    self.update_state(state='PROGRESS', meta={"current": i + 1, "total": len(chunks), "audio_name": audio_name})    
+
 
                 # Attempt concatenation via ffmpeg
                 list_file = os.path.join(temp_dir, "files.txt")
