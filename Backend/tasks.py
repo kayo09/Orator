@@ -6,6 +6,7 @@ import subprocess
 import shutil
 from celery.utils.log import get_task_logger
 from celery_config import celery_app
+from supabase_client import supabase_enabled, upload_audio_to_supabase
 
 logger = get_task_logger(__name__)
 
@@ -172,6 +173,14 @@ def convert_text_to_audio(self, text: str, file_id: str = None) -> str:
             raise RuntimeError("Audio generation failed or produced empty file")
 
         logger.info(f"TTS conversion complete: {audio_path}")
+
+        if supabase_enabled():
+            try:
+                upload_audio_to_supabase(audio_path, audio_name)
+                logger.info("Uploaded audio to Supabase")
+            except Exception as e:
+                logger.warning(f"Supabase upload failed: {e}")
+
         return audio_name
 
     except Exception as e:

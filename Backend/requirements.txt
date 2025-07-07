@@ -19,3 +19,4 @@ pandas
 redis
 ebooklib
 beautifulsoup4
+supabase

@@ -178,5 +178,14 @@ async def get_audio(file_id: str):
     return FileResponse(
         path=str(path),
         media_type="audio/wav",
-        filename=f"{file_id}.wav"
+      filename=f"{file_id}.wav"
     )
+
+
+@api_router.get("/files/{file_id}/original")
+async def get_original(file_id: str):
+    """Return the originally uploaded file."""
+    path = next(UPLOAD_DIR.glob(f"{file_id}.*"), None)
+    if not path:
+        raise HTTPException(404, "File not found")
+    return FileResponse(path=str(path), filename=path.name)

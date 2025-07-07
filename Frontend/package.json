@@ -14,7 +14,10 @@
     "axios": "^1.10.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "react-redux": "^9.2.0"
+    "react-redux": "^9.2.0",
+    "react-pdf": "^7.7.0",
+    "pdfjs-dist": "^3.11.174",
+    "@supabase/supabase-js": "^2.41.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",

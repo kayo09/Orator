@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import PdfAudioReader from "./PdfAudioReader";
 import "./App.css";
 
 /**************************************************
@@ -30,6 +31,7 @@ const routes = {
   convert: (fileId: string) => `${API_BASE_URL}/api/tasks?file_id=${fileId}`,
   task: (taskId: string) => `${API_BASE_URL}/api/tasks/${taskId}`,
   audio: (fileId: string) => `${API_BASE_URL}/api/files/${fileId}/audio`,
+  original: (fileId: string) => `${API_BASE_URL}/api/files/${fileId}/original`,
 };
 
 /**************************************************
@@ -187,10 +189,9 @@ export default function App() {
       {upload && upload.status === "completed" && (
         <section style={{ marginTop: 24 }}>
           <h3>Your audio is ready!</h3>
-          <audio
-            controls
-            src={routes.audio(upload.fileId)}
-            style={{ width: "100%", maxWidth: 500 }}
+          <PdfAudioReader
+            fileUrl={routes.original(upload.fileId)}
+            audioUrl={routes.audio(upload.fileId)}
           />
           <div style={{ marginTop: 8 }}>
             <a href={routes.audio(upload.fileId)} download={`${upload.originalName}.wav`}>

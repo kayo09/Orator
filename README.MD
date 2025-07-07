@@ -52,6 +52,14 @@ CLAMD_PORT=3310
 ENABLE_ANTIVIRUS=true
 ```
 
+Optional Supabase storage (used to upload generated audio):
+
+```env
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_KEY=service-key
+SUPABASE_BUCKET=orator
+```
+
 (See `docker-compose.yml` for the variables passed to each service). ([raw.githubusercontent.com](https://raw.githubusercontent.com/kayo09/orator/main/docker-compose.yml))
 
 ## 3. One‑command container build
@@ -66,6 +74,8 @@ docker compose up --build -d
 Compose spins up five services — `redis`, `clamav`, `orator-api` (FastAPI), `orator-celery` (Celery worker), and `orator-flower` (task dashboard). ([raw.githubusercontent.com](https://raw.githubusercontent.com/kayo09/orator/main/docker-compose.yml))
 
 > Tip: run `make up` instead; the Makefile wraps common compose recipes. ([raw.githubusercontent.com](https://raw.githubusercontent.com/kayo09/orator/main/Makefile))
+
+The front‑end ships with a lightweight PDF reader that scrolls along with the generated audio. When Supabase credentials are provided, converted audio files are uploaded to your Supabase storage bucket.
 
 ### Verify
 
