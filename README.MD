@@ -102,8 +102,6 @@ pip install -r requirements.txt
 streamlit run app.py 
 ```
 
-(See `package.json` for available scripts.) ([raw.githubusercontent.com](https://raw.githubusercontent.com/kayo09/orator/main/Frontend/package.json))
-
 ### 4.3 Watching Celery
 
 ```bash
