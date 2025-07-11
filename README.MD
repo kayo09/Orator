@@ -10,7 +10,7 @@
     - [Verify](#verify)
   - [4. Local development without Docker](#4-local-development-without-docker)
     - [4.1 Backend](#41-backend)
-    - [4.2 Front‑end (Vite + React + TS)](#42-frontend-vitereactts)
+    - [4.2 Front‑end (Streamlit)](#42-frontend-streamlit)
     - [4.3 Watching Celery](#43-watching-celery)
   - [5. Useful Make targets](#5-useful-make-targets)
   - [6. Running tests](#6-running-tests)
@@ -94,12 +94,12 @@ uvicorn Backend.main:app --reload --port 8000 &
 celery -A Backend.celery_config worker --pool=threads --concurrency=4 --loglevel=info &
 ```
 
-### 4.2 Front‑end (Vite + React + TS)
+### 4.2 Front‑end (Streamlit)
 
 ```bash
-cd Frontend
-npm install
-npm run dev          # served on http://localhost:5173 by default
+cd Frontend_Streamlit
+pip install -r requirements.txt
+streamlit run app.py 
 ```
 
 (See `package.json` for available scripts.) ([raw.githubusercontent.com](https://raw.githubusercontent.com/kayo09/orator/main/Frontend/package.json))
