@@ -2,7 +2,7 @@ from fastapi import APIRouter, UploadFile, HTTPException, Query
 from fastapi.responses import FileResponse
 from celery.result import AsyncResult
 from celery_config import celery_app
-from tasks import convert_text_to_audio
+# from tasks import convert_text_to_audio
 from pathlib import Path
 from uuid import uuid4
 import shutil
@@ -36,12 +36,14 @@ MAX_FILE_SIZE_MB = 30
 @api_router.post("/files")
 async def upload_file(file: UploadFile):
     """Save the incoming PDF/EPUB and return its generated *file_id*."""
+    if not file.filename:
+        raise HTTPException(400, "No filename provided")
     suffix = Path(file.filename).suffix.lower()
     if suffix not in ALLOWED_EXTENSIONS:
         raise HTTPException(415, "Unsupported file type")
 
-    # Naïve size guard (UploadFile doesn't expose size, but our reverse proxy might)
-    if getattr(file, "size", None) and file.size > MAX_FILE_SIZE_MB * 1024 * 1024:
+    file_size = getattr(file, "size", None)
+    if file_size is not None and file_size > MAX_FILE_SIZE_MB * 1024 * 1024:
         raise HTTPException(413, "File too large")
 
     file_id = uuid4().hex

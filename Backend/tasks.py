@@ -12,7 +12,7 @@ logger = get_task_logger(__name__)
 # Globals and chunking configuration
 tts_model = None
 MIN_CHARS = 50       # Minimum chars per chunk to avoid tiny audio segments
-MAX_CHARS = 2000     # Target max chars per chunk (~1–2 minute speech)
+MAX_CHARS = 500000   # Target max chars per chunk (~1–2 minute speech)
 
 
 def get_tts_model():
