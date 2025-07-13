@@ -20,27 +20,26 @@ class APIRoutes:
     @staticmethod
     def upload():
         return f"{API_BASE_URL}/api/files"
-    
+
     @staticmethod
     def convert(file_id: str):
         return f"{API_BASE_URL}/api/tasks?file_id={file_id}"
-    
+
     @staticmethod
     def task(task_id: str):
         return f"{API_BASE_URL}/api/tasks/{task_id}"
-    
+
     @staticmethod
     def audio(file_id: str):
         return f"{API_BASE_URL}/api/files/{file_id}/audio"
-    
+
     @staticmethod
     def text_segments(file_id: str):
         return f"{API_BASE_URL}/api/files/{file_id}/segments"
-    
+
     @staticmethod
     def pdf_content(file_id: str):
         return f"{API_BASE_URL}/api/files/{file_id}/pdf"
-
 # Initialize session state
 if 'upload_state' not in st.session_state:
     st.session_state.upload_state = None
@@ -117,29 +116,33 @@ def check_task_status(task_id: str) -> Dict[str, Any]:
         return {"state": "FAILURE", "error": str(e)}
 
 def fetch_text_segments(file_id: str) -> List[Dict]:
-    """Fetch text segments with timestamps for read-along"""
     try:
         response = requests.get(APIRoutes.text_segments(file_id))
         if response.status_code == 200:
             return response.json().get("segments", [])
+        elif response.status_code == 404:
+            st.warning("Text segments not found. They may not have been generated.")
+            return []
         else:
-            log_debug(f"Failed to fetch segments: {response.status_code}")
+            st.warning(f"Failed to fetch segments: {response.status_code}")
             return []
     except Exception as e:
-        log_debug(f"Error fetching segments: {str(e)}")
+        st.warning(f"Error fetching segments: {str(e)}")
         return []
 
 def fetch_pdf_content(file_id: str) -> Optional[bytes]:
-    """Fetch PDF content for display"""
     try:
         response = requests.get(APIRoutes.pdf_content(file_id))
         if response.status_code == 200:
             return response.content
+        elif response.status_code == 404:
+            st.warning("PDF file not found.")
+            return None
         else:
-            log_debug(f"Failed to fetch PDF: {response.status_code}")
+            st.warning(f"Failed to fetch PDF: {response.status_code}")
             return None
     except Exception as e:
-        log_debug(f"Error fetching PDF: {str(e)}")
+        st.warning(f"Error fetching PDF: {str(e)}")
         return None
 
 def poll_task_status(task_id: str, file_id: str, progress_bar, status_text):

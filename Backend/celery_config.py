@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 from celery import Celery
+import nltk
+nltk.download("punkt", quiet=True)
 # Environment variables (with default fallbacks)
 broker_url = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
 result_backend = os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:6379/0")

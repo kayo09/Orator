@@ -12,7 +12,11 @@ from bs4 import BeautifulSoup
 import pdfplumber
 from io import BytesIO
 import asyncio
-import tasks  # Add this import
+import tasks  
+from fastapi.responses import JSONResponse
+import json
+import os
+
 
 api_router = APIRouter()
 
@@ -174,6 +178,9 @@ async def task_status(task_id: str):
 async def get_audio(file_id: str):
     """Return the audio file for download/streaming."""
     path = AUDIO_DIR / f"{file_id}.wav"
+    print(f"Looking for audio file at: {path}")
+    print(f"Audio directory contents: {list(AUDIO_DIR.glob('*'))}")
+    
     if not path.exists():
         raise HTTPException(404, "Audio not ready")
     
@@ -182,3 +189,44 @@ async def get_audio(file_id: str):
         media_type="audio/wav",
         filename=f"{file_id}.wav"
     )
+
+@api_router.get("/files/{file_id}/pdf")
+async def get_pdf(file_id: str):
+    path = UPLOAD_DIR / f"{file_id}.pdf"
+    if not path.exists():
+        raise HTTPException(404, "PDF not found")
+    return FileResponse(path=path, media_type="application/pdf", filename=f"{file_id}.pdf")
+
+@api_router.get("/debug/files")
+async def debug_files():
+    """Debug endpoint to check file system state"""
+    
+    debug_info = {
+        "base_dir": str(BASE_DIR),
+        "static_dir": str(STATIC_DIR),
+        "upload_dir": str(UPLOAD_DIR),
+        "audio_dir": str(AUDIO_DIR),
+        "audio_dir_exists": AUDIO_DIR.exists(),
+        "upload_dir_exists": UPLOAD_DIR.exists(),
+        "audio_files": [],
+        "upload_files": [],
+        "cwd": os.getcwd()
+    }
+    
+    if AUDIO_DIR.exists():
+        debug_info["audio_files"] = [f.name for f in AUDIO_DIR.glob("*")]
+    
+    if UPLOAD_DIR.exists():
+        debug_info["upload_files"] = [f.name for f in UPLOAD_DIR.glob("*")]
+    
+    return debug_info
+
+@api_router.get("/files/{file_id}/segments")
+async def get_segments(file_id: str):
+    path = AUDIO_DIR / f"{file_id}_segments.json"
+    print(f"Looking for segments file at: {path}")
+    print(f"Audio directory contents: {list(AUDIO_DIR.glob('*'))}")
+    
+    if not path.exists():
+        raise HTTPException(404, "Segments not found")
+    return JSONResponse(content=json.loads(path.read_text()))

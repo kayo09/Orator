@@ -19,3 +19,5 @@ pandas
 redis
 ebooklib
 beautifulsoup4
+espeakng
+py-espeak-ng
