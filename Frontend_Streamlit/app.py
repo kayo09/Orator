@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 # Constants
-API_BASE_URL = os.getenv("API_BASE_URL", "orator-production.up.railway.app")
+API_BASE_URL = os.getenv("API_BASE_URL", "https://orator-production.up.railway.app")
 
 class APIRoutes:
     @staticmethod
