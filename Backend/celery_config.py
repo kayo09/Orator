@@ -4,8 +4,8 @@ from celery import Celery
 import nltk
 nltk.download("punkt", quiet=True)
 # Environment variables (with default fallbacks)
-broker_url = os.getenv("CELERY_BROKER_URL", "redis://shinkansen.proxy.rlwy.net:10296")
-result_backend = os.getenv("CELERY_RESULT_BACKEND", "redis://shinkansen.proxy.rlwy.net:10296")
+broker_url = os.getenv("CELERY_BROKER_URL", "redis://nozomi.proxy.rlwy.net:54938")
+result_backend = os.getenv("CELERY_RESULT_BACKEND", "redis://nozomi.proxy.rlwy.net:54938")
 
 celery_app = Celery(
     "orator",
